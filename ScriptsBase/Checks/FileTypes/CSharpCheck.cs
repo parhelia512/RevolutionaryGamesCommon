@@ -3,6 +3,7 @@ namespace ScriptsBase.Checks.FileTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -22,6 +23,11 @@ public class CSharpCheck : FileCheck
 
     private const string RAZOR_EXTENSION = ".razor";
     private const string NOT_ALLOWED_MATH = "Mathf" + ".";
+
+    private static readonly string[] AllowedMathfFunctions =
+    [
+        ".Lerp", ".LinearToDb", ".DbToLinear", ".FloorToInt",
+    ];
 
     private static readonly Regex WrongLoopIncrementSyntax =
         new(@"for\s*\(.+;\s*(\w+\+\+)\)\s*$", RegexOptions.Compiled);
@@ -119,8 +125,10 @@ public class CSharpCheck : FileCheck
 
             if (line.Contains(NOT_ALLOWED_MATH))
             {
+                bool containsAllowedFunction = AllowedMathfFunctions.Any(allowed => line.Contains(allowed));
+
                 // Allow some specific stuff that's missing from core system math but Godot has it
-                if (!line.Contains(".Lerp") && !line.Contains(".LinearToDb") && !line.Contains(".DbToLinear"))
+                if (!containsAllowedFunction)
                 {
                     yield return $"Line {lineNumber} contains a reference for Godot math library that is no longer " +
                         $"needed due to updated dotnet version (use MathF instead, except for the few things it " +
