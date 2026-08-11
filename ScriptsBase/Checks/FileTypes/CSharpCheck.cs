@@ -26,7 +26,7 @@ public class CSharpCheck : FileCheck
 
     private static readonly string[] AllowedMathfFunctions =
     [
-        ".Lerp", ".LinearToDb", ".DbToLinear", ".FloorToInt", ".Clamp",
+        ".Lerp", ".LinearToDb", ".DbToLinear", ".FloorToInt",
     ];
 
     private static readonly Regex WrongLoopIncrementSyntax =
