@@ -161,6 +161,7 @@ public interface ISArchiveReader
     ///   Class-variant of updating just properties
     /// </summary>
     /// <returns>True if updated</returns>
+    /// <typeparam name="T">Type of object to read</typeparam>
     public bool ReadObjectProperties<T>(T obj)
         where T : class, IArchiveUpdatable;
 
