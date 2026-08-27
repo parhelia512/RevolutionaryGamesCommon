@@ -34,9 +34,11 @@ public class DefaultArchiveManager : IArchiveWriteManager, IArchiveReadManager
     /// </summary>
     private readonly Dictionary<ArchiveObjectType, Type> additionalKnownTypes = new();
 
-    // Object reference handling
-    private readonly Dictionary<object, long> objectIdPositions = new();
-    private readonly Dictionary<object, int> objectIds = new();
+    // Object reference handling.
+    // These dictionaries track object identity in the archive graph. They must not use an object's value equality,
+    // as distinct mutable objects that happen to currently have equal data still need to be serialized separately.
+    private readonly Dictionary<object, long> objectIdPositions = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<object, int> objectIds = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>
     ///   Used on a load to know what objects are loaded

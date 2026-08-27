@@ -121,15 +121,15 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_TupleWithCustomClassType()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
         var memoryStream = new MemoryStream();
         var writer = new SArchiveMemoryWriter(memoryStream, customManager);
         var reader = new SArchiveMemoryReader(memoryStream, customManager);
 
-        var original = (42, new ArchiveObjectTests.TestObject1
+        var original = (42, new TestObject1
         {
             Value1 = 1,
             Value2 = 2,
@@ -141,7 +141,7 @@ public class ArchiveCollectionTests
 
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        (int, ArchiveObjectTests.TestObject1) result = default;
+        (int, TestObject1) result = default;
 
         Assert.NotEqual(original, result);
         reader.ReadAnyStruct(ref result);
@@ -420,15 +420,15 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_ListWithCustomClassType()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
         var memoryStream = new MemoryStream();
         var writer = new SArchiveMemoryWriter(memoryStream, customManager);
         var reader = new SArchiveMemoryReader(memoryStream, customManager);
 
-        var original = new List<ArchiveObjectTests.TestObject1>
+        var original = new List<TestObject1>
         {
             new()
             {
@@ -443,7 +443,7 @@ public class ArchiveCollectionTests
 
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        var read = reader.ReadObjectOrNull<List<ArchiveObjectTests.TestObject1>>();
+        var read = reader.ReadObjectOrNull<List<TestObject1>>();
 
         Assert.NotNull(read);
         Assert.True(original.SequenceEqual(read));
@@ -508,18 +508,18 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_DictionaryWithCustomClassKey()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
         var memoryStream = new MemoryStream();
         var writer = new SArchiveMemoryWriter(memoryStream, customManager);
         var reader = new SArchiveMemoryReader(memoryStream, customManager);
 
-        var original = new Dictionary<ArchiveObjectTests.TestObject1, string>
+        var original = new Dictionary<TestObject1, string>
         {
             {
-                new ArchiveObjectTests.TestObject1
+                new TestObject1
                 {
                     Value1 = 12,
                     Value2 = 0,
@@ -534,7 +534,7 @@ public class ArchiveCollectionTests
 
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        var read = reader.ReadObjectOrNull<Dictionary<ArchiveObjectTests.TestObject1, string>>();
+        var read = reader.ReadObjectOrNull<Dictionary<TestObject1, string>>();
 
         Assert.NotNull(read);
         Assert.Equal(original.Count, read.Count);
@@ -548,19 +548,19 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_DictionaryWithCustomClassValue()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
         var memoryStream = new MemoryStream();
         var writer = new SArchiveMemoryWriter(memoryStream, customManager);
         var reader = new SArchiveMemoryReader(memoryStream, customManager);
 
-        var original = new Dictionary<string, ArchiveObjectTests.TestObject1>
+        var original = new Dictionary<string, TestObject1>
         {
             {
                 "item1",
-                new ArchiveObjectTests.TestObject1
+                new TestObject1
                 {
                     Value1 = 12,
                     Value2 = 0,
@@ -574,7 +574,7 @@ public class ArchiveCollectionTests
 
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        var read = reader.ReadObjectOrNull<Dictionary<string, ArchiveObjectTests.TestObject1>>();
+        var read = reader.ReadObjectOrNull<Dictionary<string, TestObject1>>();
 
         Assert.NotNull(read);
         Assert.Equal(original.Count, read.Count);
@@ -590,10 +590,10 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_DictionaryWithCustomClassKeyAndValue()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
 
         customManager.RegisterObjectType(ArchiveObjectType.TestObjectType2, typeof(ArchiveObjectTests.TestObject5),
             ArchiveObjectTests.TestObject5.WriteToArchive);
@@ -605,7 +605,7 @@ public class ArchiveCollectionTests
         var writer = new SArchiveMemoryWriter(memoryStream, customManager);
         var reader = new SArchiveMemoryReader(memoryStream, customManager);
 
-        var keyObject = new ArchiveObjectTests.TestObject1
+        var keyObject = new TestObject1
         {
             Value1 = 12,
             Value2 = 0,
@@ -613,7 +613,7 @@ public class ArchiveCollectionTests
             Value4 = true,
         };
 
-        var original = new Dictionary<ArchiveObjectTests.TestObject1, ArchiveObjectTests.TestObject5>
+        var original = new Dictionary<TestObject1, ArchiveObjectTests.TestObject5>
         {
             {
                 keyObject,
@@ -632,7 +632,7 @@ public class ArchiveCollectionTests
         memoryStream.Seek(0, SeekOrigin.Begin);
 
         var read = reader
-            .ReadObjectOrNull<Dictionary<ArchiveObjectTests.TestObject1, ArchiveObjectTests.TestObject5>>();
+            .ReadObjectOrNull<Dictionary<TestObject1, ArchiveObjectTests.TestObject5>>();
 
         Assert.NotNull(read);
         Assert.Equal(original.Count, read.Count);
@@ -750,10 +750,10 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_NestedDictionaryWithDictionariesAndListsAndCustomClass()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
 
         customManager.RegisterObjectType(ArchiveObjectType.TestObjectType2, typeof(ArchiveObjectTests.TestObject5),
             ArchiveObjectTests.TestObject5.WriteToArchive);
@@ -765,7 +765,7 @@ public class ArchiveCollectionTests
         var writer = new SArchiveMemoryWriter(memoryStream, customManager);
         var reader = new SArchiveMemoryReader(memoryStream, customManager);
 
-        var keyObject = new ArchiveObjectTests.TestObject1
+        var keyObject = new TestObject1
         {
             Value1 = 12,
             Value2 = 0,
@@ -784,7 +784,7 @@ public class ArchiveCollectionTests
         List<int> innerSequence = [25, 28];
 
         var original =
-            new Dictionary<ArchiveObjectTests.TestObject1, Dictionary<ArchiveObjectTests.TestObject5, List<int>>>
+            new Dictionary<TestObject1, Dictionary<ArchiveObjectTests.TestObject5, List<int>>>
             {
                 {
                     keyObject,
@@ -803,7 +803,7 @@ public class ArchiveCollectionTests
         memoryStream.Seek(0, SeekOrigin.Begin);
 
         var read = reader
-            .ReadObjectOrNull<Dictionary<ArchiveObjectTests.TestObject1,
+            .ReadObjectOrNull<Dictionary<TestObject1,
                 Dictionary<ArchiveObjectTests.TestObject5, List<int>>>>();
 
         Assert.NotNull(read);
@@ -819,10 +819,10 @@ public class ArchiveCollectionTests
     public void ArchiveCollection_NestedDictionaryWithDictionariesAndListsAndCustomClassThatIsEmpty()
     {
         var customManager = new DefaultArchiveManager(true);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.WriteToArchive);
-        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(ArchiveObjectTests.TestObject1),
-            ArchiveObjectTests.TestObject1.ReadFromArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.WriteToArchive);
+        customManager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject1),
+            TestObject1.ReadFromArchive);
 
         customManager.RegisterObjectType(ArchiveObjectType.TestObjectType2, typeof(ArchiveObjectTests.TestObject5),
             ArchiveObjectTests.TestObject5.WriteToArchive);
@@ -837,14 +837,14 @@ public class ArchiveCollectionTests
         // Intentionally empty dictionary
         // ReSharper disable once CollectionNeverUpdated.Local
         var original =
-            new Dictionary<ArchiveObjectTests.TestObject1, Dictionary<ArchiveObjectTests.TestObject5, List<int>>>();
+            new Dictionary<TestObject1, Dictionary<ArchiveObjectTests.TestObject5, List<int>>>();
 
         writer.WriteObject(original);
 
         memoryStream.Seek(0, SeekOrigin.Begin);
 
         var read = reader
-            .ReadObjectOrNull<Dictionary<ArchiveObjectTests.TestObject1,
+            .ReadObjectOrNull<Dictionary<TestObject1,
                 Dictionary<ArchiveObjectTests.TestObject5, List<int>>>>();
 
         Assert.NotNull(read);
@@ -1149,7 +1149,7 @@ public class ArchiveCollectionTests
         memoryStream.Seek(0, SeekOrigin.Begin);
 
         var exception =
-            Assert.Throws<FormatException>(() => reader.ReadObjectOrNull<Dictionary<ValueCoalescingStruct, float>>());
+            Assert.Throws<FormatException>(reader.ReadObjectOrNull<Dictionary<ValueCoalescingStruct, float>>);
 
         Assert.Contains("add read item to dictionary", exception.Message);
         Assert.NotNull(exception.InnerException);
