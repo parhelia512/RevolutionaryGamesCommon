@@ -20,6 +20,7 @@ public class CSharpCheck : FileCheck
     // The first three regexes are compiled here as they are used on all lines of source code
     public static readonly Regex MissingFloatDecimalPoint = new(@"(?<![\d.eE]|[\deE][+-])\b\d+f\b",
         RegexOptions.Compiled);
+
     public static readonly Regex IncorrectFloatSuffixCase = new(@"^\d+F\W", RegexOptions.Compiled);
 
     private const string RAZOR_EXTENSION = ".razor";
