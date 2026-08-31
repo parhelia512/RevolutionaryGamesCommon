@@ -54,7 +54,7 @@ public class ArchiveCallbackTests
 
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        Assert.Throws<FormatException>(() => reader.ReadDelegate<CallableTestClass.TestDelegate>());
+        Assert.Throws<FormatException>(reader.ReadDelegate<CallableTestClass.TestDelegate>);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class ArchiveCallbackTests
 
             memoryStream.Seek(0, SeekOrigin.Begin);
 
-            Assert.Throws<FormatException>(() => reader.ReadDelegate<CallableTestClass.TestDelegate>());
+            Assert.Throws<FormatException>(reader.ReadDelegate<CallableTestClass.TestDelegate>);
         });
     }
 

@@ -32,7 +32,7 @@ public class ArchiveErrorMessageTests
 
         // This should cause an error message that points to the ancestor problem
         manager.OnStartNewRead(reader);
-        var exception = Assert.Throws<AncestorReferenceException>(() => reader.ReadObjectOrNull<TestObject1>());
+        var exception = Assert.Throws<AncestorReferenceException>(reader.ReadObjectOrNull<TestObject1>);
         manager.OnFinishRead(reader);
 
         Assert.Contains(nameof(ArchiveObjectType.TestObjectType1), exception.Message);
