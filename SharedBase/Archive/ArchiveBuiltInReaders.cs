@@ -130,6 +130,7 @@ public static class ArchiveBuiltInReaders
     /// <summary>
     ///   More efficient variant of tuple reading when the real target type is known.
     /// </summary>
+    /// <typeparam name="T1">First type in the tuple receiver</typeparam>
     public static void ReadValueTuple<T1>(ref ValueTuple<T1> receiver, int length, ISArchiveReader reader)
     {
         var receiverType = receiver.GetType();

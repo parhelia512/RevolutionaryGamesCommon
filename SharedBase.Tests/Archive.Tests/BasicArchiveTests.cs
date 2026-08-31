@@ -484,7 +484,7 @@ public class BasicArchiveTests
         // Read "accidentally" too much
         memoryStream.Seek(1, SeekOrigin.Current);
 
-        Assert.Throws<FormatException>(() => reader.ReadArchiveFooter());
+        Assert.Throws<FormatException>(reader.ReadArchiveFooter);
     }
 
     [Fact]

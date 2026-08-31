@@ -1,4 +1,4 @@
-namespace SharedBase.Tests.Archive.Tests;
+﻿namespace SharedBase.Tests.Archive.Tests;
 
 using System;
 using System.IO;
@@ -107,6 +107,48 @@ public class ArchiveObjectTests
 
         Assert.False(ReferenceEquals(testObject, read));
         Assert.True(ReferenceEquals(read, read2));
+    }
+
+    [Fact]
+    public void ArchiveObject_EqualButDistinctObjectsKeepSeparateIdentities()
+    {
+        var manager = new DefaultArchiveManager(false);
+        manager.RegisterObjectType(ArchiveObjectType.TestObjectType1, typeof(TestObject2), TestObject2.ReadFromArchive);
+        var memoryStream = new MemoryStream();
+        var writer = new SArchiveMemoryWriter(memoryStream, manager);
+        var reader = new SArchiveMemoryReader(memoryStream, manager);
+
+        var first = new TestObject2
+        {
+            Value1 = 12,
+            Value2 = 34,
+            Value3 = "equal",
+            Value4 = true,
+        };
+        var second = new TestObject2
+        {
+            Value1 = first.Value1,
+            Value2 = first.Value2,
+            Value3 = first.Value3,
+            Value4 = first.Value4,
+        };
+
+        Assert.Equal(first, second);
+        Assert.False(ReferenceEquals(first, second));
+
+        manager.OnStartNewWrite(writer);
+        writer.WriteObject(first);
+        writer.WriteObject(second);
+        manager.OnFinishWrite(writer);
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
+
+        var readFirst = reader.ReadObjectLowLevel(out _);
+        var readSecond = reader.ReadObjectLowLevel(out _);
+
+        Assert.NotNull(readFirst);
+        Assert.NotNull(readSecond);
+        Assert.False(ReferenceEquals(readFirst, readSecond));
     }
 
     [Fact]
@@ -230,6 +272,55 @@ public class ArchiveObjectTests
         Assert.Equal(12, testObject.Value);
     }
 
+    internal record struct TestObject5 : IArchiveReadableVariable
+    {
+        public const ushort SERIALIZATION_VERSION = 1;
+        public const bool CAN_BE_REFERENCE = false;
+
+        public float Value1;
+        public int Value2;
+        public string? Value3;
+        public bool Value4;
+
+        public ushort CurrentArchiveVersion => SERIALIZATION_VERSION;
+        public ArchiveObjectType ArchiveObjectType => ArchiveObjectType.TestObjectType2;
+        public bool CanBeReferencedInArchive => CAN_BE_REFERENCE;
+
+        public static IArchiveReadableVariable ConstructBoxedArchiveRead(ISArchiveReader reader,
+            out bool performedCustomRead, ushort version)
+        {
+            performedCustomRead = false;
+            return default(TestObject5);
+        }
+
+        public static void WriteToArchive(ISArchiveWriter writer, ArchiveObjectType type, object obj)
+        {
+            if (type != ArchiveObjectType.TestObjectType2)
+                throw new NotSupportedException();
+
+            writer.WriteObject((TestObject5)obj);
+        }
+
+        public void WriteToArchive(ISArchiveWriter writer)
+        {
+            writer.Write(Value1);
+            writer.Write(Value2);
+            writer.Write(Value3);
+            writer.Write(Value4);
+        }
+
+        public void ReadFromArchive(ISArchiveReader reader, ushort version)
+        {
+            if (version is > SERIALIZATION_VERSION or <= 0)
+                throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
+
+            Value1 = reader.ReadFloat();
+            Value2 = reader.ReadInt32();
+            Value3 = reader.ReadString();
+            Value4 = reader.ReadBool();
+        }
+    }
+
     internal struct TestObject3 : IArchiveUpdatable
     {
         public const ushort SERIALIZATION_VERSION = 1;
@@ -311,182 +402,136 @@ public class ArchiveObjectTests
             Value4 = reader.ReadBool();
         }
     }
+}
 
-    internal record struct TestObject5 : IArchiveReadableVariable
+// These need to be outside the scope due to weird checks related to class and struct ordering that disagrees with
+// another check.
+
+internal class TestObject1 : IArchivable
+{
+    public const ushort SERIALIZATION_VERSION = 1;
+    public const bool CAN_BE_REFERENCE = false;
+
+    public float Value1;
+
+    public int Value2;
+
+    public string? Value3;
+
+    public bool Value4;
+
+    public ushort CurrentArchiveVersion => SERIALIZATION_VERSION;
+
+    public ArchiveObjectType ArchiveObjectType => ArchiveObjectType.TestObjectType1;
+    public virtual bool CanBeReferencedInArchive => CAN_BE_REFERENCE;
+
+    public static bool operator ==(TestObject1? left, TestObject1? right)
     {
-        public const ushort SERIALIZATION_VERSION = 1;
-        public const bool CAN_BE_REFERENCE = false;
-
-        public float Value1;
-        public int Value2;
-        public string? Value3;
-        public bool Value4;
-
-        public ushort CurrentArchiveVersion => SERIALIZATION_VERSION;
-        public ArchiveObjectType ArchiveObjectType => ArchiveObjectType.TestObjectType2;
-        public bool CanBeReferencedInArchive => CAN_BE_REFERENCE;
-
-        public static IArchiveReadableVariable ConstructBoxedArchiveRead(ISArchiveReader reader,
-            out bool performedCustomRead, ushort version)
-        {
-            performedCustomRead = false;
-            return default(TestObject5);
-        }
-
-        public static void WriteToArchive(ISArchiveWriter writer, ArchiveObjectType type, object obj)
-        {
-            if (type != ArchiveObjectType.TestObjectType2)
-                throw new NotSupportedException();
-
-            writer.WriteObject((TestObject5)obj);
-        }
-
-        public void WriteToArchive(ISArchiveWriter writer)
-        {
-            writer.Write(Value1);
-            writer.Write(Value2);
-            writer.Write(Value3);
-            writer.Write(Value4);
-        }
-
-        public void ReadFromArchive(ISArchiveReader reader, ushort version)
-        {
-            if (version is > SERIALIZATION_VERSION or <= 0)
-                throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
-
-            Value1 = reader.ReadFloat();
-            Value2 = reader.ReadInt32();
-            Value3 = reader.ReadString();
-            Value4 = reader.ReadBool();
-        }
+        return Equals(left, right);
     }
 
-    internal class TestObject1 : IArchivable
+    public static bool operator !=(TestObject1? left, TestObject1? right)
     {
-        public const ushort SERIALIZATION_VERSION = 1;
-        public const bool CAN_BE_REFERENCE = false;
-
-        public float Value1;
-
-        public int Value2;
-
-        public string? Value3;
-
-        public bool Value4;
-
-        public ushort CurrentArchiveVersion => SERIALIZATION_VERSION;
-
-        public ArchiveObjectType ArchiveObjectType => ArchiveObjectType.TestObjectType1;
-        public virtual bool CanBeReferencedInArchive => CAN_BE_REFERENCE;
-
-        public static bool operator ==(TestObject1? left, TestObject1? right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(TestObject1? left, TestObject1? right)
-        {
-            return !Equals(left, right);
-        }
-
-        public static void WriteToArchive(ISArchiveWriter writer, ArchiveObjectType type, object obj)
-        {
-            if (type != ArchiveObjectType.TestObjectType1)
-                throw new NotSupportedException();
-
-            writer.WriteObject((TestObject1)obj);
-        }
-
-        public static TestObject1 ReadFromArchive(ISArchiveReader reader, ushort version, int referenceId)
-        {
-            if (version is > SERIALIZATION_VERSION or <= 0)
-                throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
-
-            var instance = new TestObject1
-            {
-                Value1 = reader.ReadFloat(),
-                Value2 = reader.ReadInt32(),
-                Value3 = reader.ReadString(),
-                Value4 = reader.ReadBool(),
-            };
-
-            return instance;
-        }
-
-        public void WriteToArchive(ISArchiveWriter writer)
-        {
-            writer.Write(Value1);
-            writer.Write(Value2);
-            writer.Write(Value3);
-            writer.Write(Value4);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is null)
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            if (obj.GetType() != GetType())
-                return false;
-
-            return Equals((TestObject1)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Value1, Value2, Value3, Value4);
-        }
-
-        protected bool Equals(TestObject1 other)
-        {
-            return Value1.Equals(other.Value1) && Value2 == other.Value2 && Value3 == other.Value3 &&
-                Value4 == other.Value4;
-        }
+        return !Equals(left, right);
     }
 
-    internal class TestObject2 : TestObject1
+    public static void WriteToArchive(ISArchiveWriter writer, ArchiveObjectType type, object obj)
     {
-        public override bool CanBeReferencedInArchive => true;
+        if (type != ArchiveObjectType.TestObjectType1)
+            throw new NotSupportedException();
 
-        // ReSharper disable once ArrangeModifiersOrder
-        public static new TestObject2 ReadFromArchive(ISArchiveReader reader, ushort version, int referenceId)
-        {
-            if (version is > SERIALIZATION_VERSION or <= 0)
-                throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
-
-            var instance = new TestObject2
-            {
-                Value1 = reader.ReadFloat(),
-                Value2 = reader.ReadInt32(),
-                Value3 = reader.ReadString(),
-                Value4 = reader.ReadBool(),
-            };
-
-            return instance;
-        }
+        writer.WriteObject((TestObject1)obj);
     }
 
-    internal class SimpleUpdatableObject : IArchiveUpdatable
+    public static TestObject1 ReadFromArchive(ISArchiveReader reader, ushort version, int referenceId)
     {
-        public const ushort SERIALIZATION_VERSION = 1;
+        if (version is > SERIALIZATION_VERSION or <= 0)
+            throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
 
-        public int Value;
-
-        public ushort CurrentArchiveVersion => SERIALIZATION_VERSION;
-        public ArchiveObjectType ArchiveObjectType => ArchiveObjectType.TestObjectType1;
-
-        public void WritePropertiesToArchive(ISArchiveWriter writer)
+        var instance = new TestObject1
         {
-            writer.Write(Value);
-        }
+            Value1 = reader.ReadFloat(),
+            Value2 = reader.ReadInt32(),
+            Value3 = reader.ReadString(),
+            Value4 = reader.ReadBool(),
+        };
 
-        public void ReadPropertiesFromArchive(ISArchiveReader reader, ushort version)
+        return instance;
+    }
+
+    public void WriteToArchive(ISArchiveWriter writer)
+    {
+        writer.Write(Value1);
+        writer.Write(Value2);
+        writer.Write(Value3);
+        writer.Write(Value4);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+            return false;
+        if (ReferenceEquals(this, obj))
+            return true;
+        if (obj.GetType() != GetType())
+            return false;
+
+        return Equals((TestObject1)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Value1, Value2, Value3, Value4);
+    }
+
+    protected bool Equals(TestObject1 other)
+    {
+        return Value1.Equals(other.Value1) && Value2 == other.Value2 && Value3 == other.Value3 &&
+            Value4 == other.Value4;
+    }
+}
+
+internal class TestObject2 : TestObject1
+{
+    public override bool CanBeReferencedInArchive => true;
+
+    // ReSharper disable once ArrangeModifiersOrder
+    public static new TestObject2 ReadFromArchive(ISArchiveReader reader, ushort version, int referenceId)
+    {
+        if (version is > SERIALIZATION_VERSION or <= 0)
+            throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
+
+        var instance = new TestObject2
         {
-            if (version is > SERIALIZATION_VERSION or <= 0)
-                throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
+            Value1 = reader.ReadFloat(),
+            Value2 = reader.ReadInt32(),
+            Value3 = reader.ReadString(),
+            Value4 = reader.ReadBool(),
+        };
 
-            Value = reader.ReadInt32();
-        }
+        return instance;
+    }
+}
+
+internal class SimpleUpdatableObject : IArchiveUpdatable
+{
+    public const ushort SERIALIZATION_VERSION = 1;
+
+    public int Value;
+
+    public ushort CurrentArchiveVersion => SERIALIZATION_VERSION;
+    public ArchiveObjectType ArchiveObjectType => ArchiveObjectType.TestObjectType1;
+
+    public void WritePropertiesToArchive(ISArchiveWriter writer)
+    {
+        writer.Write(Value);
+    }
+
+    public void ReadPropertiesFromArchive(ISArchiveReader reader, ushort version)
+    {
+        if (version is > SERIALIZATION_VERSION or <= 0)
+            throw new InvalidArchiveVersionException(version, SERIALIZATION_VERSION);
+
+        Value = reader.ReadInt32();
     }
 }

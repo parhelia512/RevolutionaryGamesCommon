@@ -433,6 +433,18 @@ public class RewriteTool : CodeCheck
                     yIndex = ModifiersOrder.IndexOf(NoModifierPlacementType);
                 }
 
+                // An explicit interface implementation has no access modifier. Keep it equal to explicitly-modified
+                // members instead of letting the asymmetric no-modifier fallback affect the result based on operand
+                // order. Name ordering is disabled for this mixed case below.
+                if (IsExplicitInterfaceMethod(x) && y.Modifiers.Count > 0)
+                {
+                    xIndex = yIndex;
+                }
+                else if (IsExplicitInterfaceMethod(y) && x.Modifiers.Count > 0)
+                {
+                    yIndex = xIndex;
+                }
+
                 if (xIndex < yIndex)
                     return -1;
 
@@ -468,10 +480,11 @@ public class RewriteTool : CodeCheck
                     return 1;
 
                 // Modifiers are all the same, compare some special names
-                if (x is MethodDeclarationSyntax xMethod && y is MethodDeclarationSyntax yMethod)
+                if (x is MethodDeclarationSyntax xMethod && y is MethodDeclarationSyntax yMethod &&
+                    (x.Modifiers.Count > 0) == (y.Modifiers.Count > 0))
                 {
-                    var xName = xMethod.Identifier.ToString();
-                    var yName = yMethod.Identifier.ToString();
+                    var xName = GetMethodName(xMethod);
+                    var yName = GetMethodName(yMethod);
 
                     var xPriority = GetActiveNames(xStatic).FirstOrDefault(t => t.Regex.IsMatch(xName), (null!, 0))
                         .Order;
@@ -487,6 +500,23 @@ public class RewriteTool : CodeCheck
 
                 // Everything we check for is equal
                 return 0;
+            }
+
+            private static string GetMethodName(MethodDeclarationSyntax method)
+            {
+                // Explicit interface implementations have no access modifier. Include their interface name so that
+                // a method such as IArchiveLayoutInitializer.InitializeFromArchive doesn't match the ^Init rule as
+                // if it were an ordinary Initialize method.
+                var interfacePrefix = method.ExplicitInterfaceSpecifier?.ToString();
+                return interfacePrefix == null ?
+                    method.Identifier.ToString() :
+                    $"{interfacePrefix}.{method.Identifier}";
+            }
+
+            private static bool IsExplicitInterfaceMethod(MemberDeclarationSyntax member)
+            {
+                return member is MethodDeclarationSyntax { ExplicitInterfaceSpecifier: not null } &&
+                    member.Modifiers.Count < 1;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
